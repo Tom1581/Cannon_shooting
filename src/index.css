@@ -1,0 +1,207 @@
+:root {
+  --cyan-blue: #00d2ff;
+  --dark-blue: #0077ff;
+  --red-mob: #ff4757;
+  --yellow-giant: #ffa502;
+  --coin-gold: #fbc531;
+  --purple-banner: #8c7ae6;
+  --bg-sky: #a4bded;
+  --platform-gray: #dcdde1;
+  --platform-dark: #718093;
+  --btn-shadow: rgba(0,0,0,0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #222;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  /* Disable pull-to-refresh on mobile */
+  overscroll-behavior: none;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile App Container */
+.game-container {
+  position: relative;
+  width: 100%;
+  max-width: 414px; /* iPhone Max width */
+  height: 100vh;
+  max-height: 896px; /* iPhone Max height */
+  background: linear-gradient(to bottom, #dbe4f9, var(--bg-sky));
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+/* HUD (Top) */
+.hud {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 10;
+  pointer-events: none; /* Let clicks pass through if needed */
+}
+
+.hud-pill {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 24px;
+  color: #111;
+  /* The distinct black border */
+  border: 3px solid #000;
+  /* 3D button effect */
+  box-shadow: 0 5px 0 #000;
+  gap: 10px;
+}
+
+.hud-pill.blue {
+  background: linear-gradient(to bottom, #74e5ff, var(--cyan-blue));
+}
+
+.hud-pill.yellow {
+  background: linear-gradient(to bottom, #ffe47a, var(--coin-gold));
+}
+
+.hud-icon {
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255,255,255,0.4);
+  border-radius: 6px;
+  border: 2px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  transform: rotate(-10deg);
+}
+
+/* Game World Wrapper */
+.game-world {
+  flex-grow: 1;
+  position: relative;
+  /* This creates the perspective typical in hypercasual clones using CSS pseudo-3D */
+  perspective: 1000px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; /* Everything anchors bottom */
+  padding-bottom: 150px; /* Space for cannons */
+}
+
+/* Base gray platform */
+.platform {
+  position: absolute;
+  bottom: 120px;
+  width: 80%;
+  height: 60%;
+  background-color: var(--platform-gray);
+  border: 4px solid #000;
+  border-bottom: 20px solid var(--platform-dark);
+  border-radius: 10px;
+  transform: rotateX(25deg);
+  z-index: 1;
+}
+
+/* Bottom Banner */
+.bottom-banner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 90px;
+  background-color: var(--purple-banner);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 4px solid #000;
+  z-index: 20;
+}
+
+.bottom-banner-text {
+  font-size: 42px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  /* Intense text stroke using text-shadow */
+  text-shadow: 
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0px  4px 0 #000;
+}
+
+/* Back button */
+.back-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  font-size: 24px;
+  z-index: 30;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* Multiplier Gate Styles */
+.multiplier-gate {
+  position: absolute;
+  background: rgba(0, 150, 255, 0.4);
+  border: 3px solid #000;
+  border-bottom: 8px solid #000;
+  color: white;
+  font-weight: 900;
+  font-size: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-shadow: 2px 2px 0 #000;
+  /* Optional: a subtle glass effect */
+  backdrop-filter: blur(2px);
+  z-index: 5;
+}
+
+/* The player base / cannons (pure CSS version) */
+.cannon-base {
+  position: absolute;
+  bottom: 20px;
+  width: 60px;
+  height: 80px;
+  background: var(--dark-blue);
+  border: 3px solid #000;
+  border-radius: 40px;
+  z-index: 10;
+  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), 0 10px 0 #000;
+}
+
+/* Canvas area for actual entities (if we implement a renderer later) */
+#game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+}

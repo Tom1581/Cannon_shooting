@@ -1,0 +1,8 @@
+{
+  "appId": "mob.control.clone",
+  "appName": "mob-control",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

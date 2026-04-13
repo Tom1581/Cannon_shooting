@@ -1,9 +1,279 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './index.css';
 
-const GIANT_RADIUS = 35;
-const BLUE_SPEED = 5;
-const HERO_RADIUS = 8;
+const MOB_RADIUS = 7;
+const GIANT_RADIUS = 22;
+
+function drawLittleMan(ctx, x, y, size, isEnemy) {
+   ctx.fillStyle = 'rgba(0,0,0,0.2)';
+   ctx.beginPath(); ctx.ellipse(x, y + 2, size * 1.5, size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+
+   const mainColor = isEnemy ? '#ff3b30' : '#2cb6fe';
+   const shadowColor = isEnemy ? '#b81c12' : '#1b8bde';
+   const highlightColor = isEnemy ? '#ffadad' : '#b3e5fc';
+
+   ctx.fillStyle = shadowColor;
+   ctx.beginPath();
+   ctx.ellipse(x - size*0.5, y, size*0.4, size*0.5, 0, 0, Math.PI*2);
+   ctx.ellipse(x + size*0.5, y, size*0.4, size*0.5, 0, 0, Math.PI*2);
+   ctx.fill();
+
+   const gradBody = ctx.createLinearGradient(x - size, y - size*2, x + size, y);
+   gradBody.addColorStop(0, highlightColor);
+   gradBody.addColorStop(0.5, mainColor);
+   gradBody.addColorStop(1, shadowColor);
+   
+   ctx.fillStyle = gradBody;
+   ctx.beginPath();
+   ctx.moveTo(x, y - size * 2.5); 
+   ctx.bezierCurveTo(x + size*1.5, y - size*1.5, x + size*1.2, y, x, y);
+   ctx.bezierCurveTo(x - size*1.2, y, x - size*1.5, y - size*1.5, x, y - size * 2.5);
+   ctx.fill();
+
+   const gradHead = ctx.createRadialGradient(x - size*0.3, y - size*2.8, size*0.1, x, y - size*2.5, size*1.2);
+   gradHead.addColorStop(0, '#ffffff'); 
+   gradHead.addColorStop(0.2, highlightColor);
+   gradHead.addColorStop(0.8, mainColor);
+   gradHead.addColorStop(1, shadowColor);
+
+   ctx.fillStyle = gradHead;
+   ctx.beginPath();
+   ctx.arc(x, y - size * 2.5, size * 1.1, 0, Math.PI * 2);
+   ctx.fill();
+
+   ctx.fillStyle = mainColor;
+   ctx.beginPath();
+   ctx.ellipse(x - size*1.1, y - size*1.2, size*0.8, size*0.4, Math.PI/6, 0, Math.PI*2);
+   ctx.ellipse(x + size*1.1, y - size*1.2, size*0.8, size*0.4, -Math.PI/6, 0, Math.PI*2);
+   ctx.fill();
+}
+
+function drawYellowGiant(ctx, x, y, size, hp, maxHp) {
+   const hpPercent = Math.max(0, hp / maxHp);
+   ctx.fillStyle = 'rgba(0,0,0,0.2)';
+   ctx.beginPath(); ctx.ellipse(x, y + 2, size * 1.5, size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+
+   const cMain = '#ffcc00';
+   const cDark = '#d4aa00';
+   const cLight = '#ffe166';
+
+   ctx.fillStyle = cDark;
+   ctx.beginPath();
+   ctx.ellipse(x - size*0.4, y, size*0.3, size*0.4, 0, 0, Math.PI*2);
+   ctx.ellipse(x + size*0.4, y, size*0.3, size*0.4, 0, 0, Math.PI*2);
+   ctx.fill();
+
+   const gradArm = ctx.createRadialGradient(x - size*1.2, y - size*1.5, size*0.3, x - size*1.2, y - size*1.5, size);
+   gradArm.addColorStop(0, cLight);
+   gradArm.addColorStop(1, cDark);
+
+   ctx.fillStyle = gradArm;
+   ctx.beginPath(); ctx.ellipse(x - size*1.2, y - size*1.2, size*0.8, size*1.5, -Math.PI/10, 0, Math.PI*2); ctx.fill();
+   ctx.beginPath(); ctx.ellipse(x + size*1.2, y - size*1.2, size*0.8, size*1.5, Math.PI/10, 0, Math.PI*2); ctx.fill();
+
+   ctx.fillStyle = '#ff3b30';
+   ctx.fillRect(x - size*2.0, y - size*0.6, size*1.2, size*0.5); 
+   ctx.fillRect(x + size*0.8, y - size*0.6, size*1.2, size*0.5); 
+
+   const gradBody = ctx.createLinearGradient(x - size, y - size*2, x + size, y);
+   gradBody.addColorStop(0, cLight);
+   gradBody.addColorStop(0.5, cMain);
+   gradBody.addColorStop(1, cDark);
+
+   ctx.fillStyle = gradBody;
+   ctx.beginPath();
+   ctx.moveTo(x, y - size * 3);
+   ctx.bezierCurveTo(x + size*1.8, y - size*2, x + size*1.5, y, x, y);
+   ctx.bezierCurveTo(x - size*1.5, y, x - size*1.8, y - size*2, x, y - size * 3);
+   ctx.fill();
+
+   const gradHead = ctx.createRadialGradient(x - size*0.2, y - size*3.2, size*0.2, x, y - size*3, size*1.2);
+   gradHead.addColorStop(0, '#ffffff');
+   gradHead.addColorStop(0.3, cLight);
+   gradHead.addColorStop(1, cDark);
+
+   ctx.fillStyle = gradHead;
+   ctx.beginPath();
+   ctx.arc(x, y - size * 3.2, size * 1.0, 0, Math.PI * 2);
+   ctx.fill();
+
+   ctx.fillStyle = '#ff3b30';
+   ctx.beginPath();
+   ctx.moveTo(x, y - size*4.5);
+   ctx.lineTo(x + size*0.8, y - size*3.6);
+   ctx.lineTo(x - size*0.8, y - size*3.6);
+   ctx.fill();
+   
+   // Health bar
+   const hY = y - size*4.8;
+   ctx.fillStyle = '#333';
+   ctx.fillRect(x - 25, hY, 50, 8);
+   ctx.fillStyle = '#ff3b30';
+   ctx.fillRect(x - 25, hY, 50 * hpPercent, 8);
+   ctx.strokeStyle = '#fff';
+   ctx.lineWidth = 1;
+   ctx.strokeRect(x - 25, hY, 50, 8);
+   
+   ctx.fillStyle = '#000';
+   ctx.font = 'bold 16px Inter';
+   ctx.textAlign = 'center';
+   ctx.textBaseline = 'bottom';
+   ctx.fillText(Math.ceil(hp), x, hY - 3);
+   ctx.fillStyle = '#fff';
+   ctx.fillText(Math.ceil(hp), x, hY - 4);
+}
+
+function drawPlayerCannonCart(ctx, x, y) {
+    ctx.fillStyle = '#2c3e50';
+    const wx = 15, wy = 8, wr = 6;
+    ctx.beginPath(); ctx.ellipse(x - wx, y - wy, wr, wr*1.5, Math.PI/2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + wx, y - wy, wr, wr*1.5, Math.PI/2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x - wx, y + wy, wr, wr*1.5, Math.PI/2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + wx, y + wy, wr, wr*1.5, Math.PI/2, 0, Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = '#6e3c3c';
+    if (ctx.roundRect) {
+        ctx.beginPath(); ctx.roundRect(x - 12, y - 12, 24, 24, 4); ctx.fill();
+    } else {
+        ctx.fillRect(x - 12, y - 12, 24, 24);
+    }
+    
+    // Base joint
+    ctx.fillStyle = '#2c3e50';
+    ctx.beginPath(); ctx.ellipse(x, y, 10, 10, 0, 0, Math.PI*2); ctx.fill();
+
+    const bGrad = ctx.createLinearGradient(x - 12, 0, x + 12, 0);
+    bGrad.addColorStop(0, '#1a5276');
+    bGrad.addColorStop(0.5, '#5dade2');
+    bGrad.addColorStop(1, '#2471a3');
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.arc(x, y + 5, 12, 0, Math.PI, false); 
+    ctx.lineTo(x - 12, y - 30);
+    ctx.arc(x, y - 30, 12, Math.PI, 0, false); 
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(x, y - 4, 12, 3, 0, Math.PI, 0, true); ctx.stroke();
+    
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.ellipse(x, y - 30, 6, 3, 0, 0, Math.PI*2); ctx.fill();
+}
+
+function getCannonClusterPositions(cx, cy, firePower) {
+    let carts = [];
+    if (firePower === 1) carts = [[0, 0]];
+    else if (firePower === 2) carts = [[-18, 0], [18, 0]];
+    else if (firePower === 3) carts = [[0, -22], [-18, 15], [18, 15]];
+    else if (firePower === 4) carts = [[-18, -25], [18, -25], [-18, 15], [18, 15]];
+    else carts = [[0, -40], [-20, -10], [20, -10], [-20, 20], [20, 20], [0, 20]];
+    return carts.map(p => [cx + p[0], cy + p[1]]);
+}
+
+function drawHeavyWeapon(ctx, cx, cy, num, scale = 1) {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(cx, cy + 20, 70*scale, 25*scale, 0, 0, Math.PI*2); ctx.fill();
+
+    const boxW = 100*scale, boxH = 50*scale, depth = 40*scale;
+    const bx = cx - boxW/2;
+    const by = cy - boxH/2;
+
+    ctx.fillStyle = '#fceabb'; 
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx + depth, by - depth);
+    ctx.lineTo(bx + boxW + depth, by - depth);
+    ctx.lineTo(bx + boxW, by);
+    ctx.fill();
+
+    const gradFront = ctx.createLinearGradient(bx, by, bx, by + boxH);
+    gradFront.addColorStop(0, '#f1c40f');
+    gradFront.addColorStop(1, '#d4ac0d');
+    ctx.fillStyle = gradFront;
+    ctx.fillRect(bx, by, boxW, boxH);
+
+    ctx.fillStyle = '#b7950b';
+    ctx.beginPath();
+    ctx.moveTo(bx + boxW, by);
+    ctx.lineTo(bx + boxW + depth, by - depth);
+    ctx.lineTo(bx + boxW + depth, by - depth + boxH);
+    ctx.lineTo(bx + boxW, by + boxH);
+    ctx.fill();
+
+    const badgeW = 70*scale;
+    const badgeH = 34*scale;
+    const badgeX = cx - badgeW/2;
+    const badgeY = by + (boxH - badgeH)/2;
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 3*scale;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 6*scale);
+    else ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#000000';
+    ctx.font = `900 ${24*scale}px Inter`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${num}`, cx, badgeY + badgeH/2 + 2*scale);
+
+    const trackY = by - 12*scale;
+    const trackW = 90*scale;
+    
+    ctx.fillStyle = '#555555'; 
+    if (ctx.roundRect) {
+        ctx.beginPath(); ctx.roundRect(cx - trackW/2, trackY, trackW, 16*scale, 4*scale); ctx.fill();
+    } else {
+        ctx.fillRect(cx - trackW/2, trackY, trackW, 16*scale);
+    }
+    
+    ctx.fillStyle = '#111';
+    for (let w = 0; w < 5; w++) {
+        ctx.beginPath(); ctx.ellipse((cx - trackW/2 + 10*scale) + w * 17.5*scale, trackY + 8*scale, 4*scale, 4*scale, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.fillStyle = '#95a5a6';
+    ctx.beginPath(); 
+    ctx.moveTo(cx - trackW/2 + 2*scale, trackY); 
+    ctx.lineTo(cx - trackW/2 + 18*scale, trackY - 14*scale); 
+    ctx.lineTo(cx + trackW/2 + 18*scale, trackY - 14*scale); 
+    ctx.lineTo(cx + trackW/2 - 2*scale, trackY); 
+    ctx.fill();
+
+    ctx.fillStyle = '#2471a3'; 
+    ctx.beginPath(); ctx.ellipse(cx + 8*scale, trackY - 8*scale, 32*scale, 14*scale, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3498db'; 
+    ctx.beginPath(); ctx.ellipse(cx + 8*scale, trackY - 12*scale, 32*scale, 14*scale, 0, 0, Math.PI*2); ctx.fill();
+
+    let barrelSpread = 22*scale;
+    let visualBarrels = 2; // Always 2 for heavy weapon drop
+    let startX = cx + 8*scale - ((visualBarrels - 1) * barrelSpread) / 2;
+    
+    for (let i = 0; i < visualBarrels; i++) {
+        let barX = startX + i * barrelSpread;
+        
+        const barGrad = ctx.createLinearGradient(barX - 9*scale, 0, barX + 9*scale, 0);
+        barGrad.addColorStop(0, '#7f8c8d');
+        barGrad.addColorStop(0.5, '#ecf0f1');
+        barGrad.addColorStop(1, '#95a5a6');
+        
+        ctx.fillStyle = barGrad;
+        ctx.beginPath();
+        ctx.arc(barX, trackY - 10*scale, 10*scale, 0, Math.PI, true); 
+        ctx.lineTo(barX - 10*scale, trackY - 45*scale);
+        ctx.arc(barX, trackY - 45*scale, 10*scale, Math.PI, 0); 
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.ellipse(barX, trackY - 45*scale, 6*scale, 3*scale, 0, 0, Math.PI*2); ctx.fill();
+    }
+}
 
 function App() {
   const canvasRef = useRef(null);
@@ -11,27 +281,23 @@ function App() {
   const [firePower, setFirePower] = useState(1);
   const [isGameOver, setIsGameOver] = useState(false);
   const [level, setLevel] = useState(1);
-  const [mobSizeUI, setMobSizeUI] = useState(1); // Drives the blue top-left counter
-  const [giantsKilledUI, setGiantsKilledUI] = useState(0); // Tracks yellow ball kills
+  const [mobSizeUI, setMobSizeUI] = useState(0); 
 
   const gameState = useRef({
-    heroes: [],
-    blueUnits: [],
-    redUnits: [],
+    cannonX: 200,
+    blueMobs: [],
+    redMobs: [],
     giants: [],
-    dodgers: [],
-    bombers: [],
     gates: [],
-    isFiring: false,
-    pointerX: 200,
+    heavyWeapons: [],
     lastFireTime: 0,
     lastEnemySpawn: 0,
     lastGateSpawn: 0,
-    startTime: 0,
+    lastHeavySpawn: 0,
     width: 0,
     height: 0,
     rAF: null,
-    giantsKilledThisLevel: 0
+    levelKills: 0
   });
 
   const upgradeCost = Math.floor(50 * Math.pow(1.8, firePower - 1));
@@ -49,64 +315,42 @@ function App() {
     setFirePower(1);
     setLevel(1);
     
-    // Seed the first hero
-    const w = gameState.current.width || window.innerWidth;
-    const h = gameState.current.height || window.innerHeight;
     gameState.current = {
       ...gameState.current,
-      heroes: [{ x: w / 2, y: h - 120 }],
-      blueUnits: [],
-      redUnits: [],
+      blueMobs: [],
+      redMobs: [],
       giants: [],
-      dodgers: [],
-      bombers: [],
       gates: [],
+      heavyWeapons: [],
       lastEnemySpawn: 0,
       lastGateSpawn: 0,
-      pointerX: w / 2,
-      startTime: Date.now(),
-      giantsKilledThisLevel: 0
+      lastHeavySpawn: 0,
+      cannonX: window.innerWidth / 2,
+      levelKills: 0
     };
-    setMobSizeUI(1);
-    setGiantsKilledUI(0);
+    setMobSizeUI(0);
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    gameState.current.startTime = Date.now();
-    
-    // Init first hero if empty
-    if (gameState.current.heroes.length === 0) {
-      gameState.current.heroes.push({ x: 200, y: 500 });
-    }
-
     const resize = () => {
       canvas.width = canvas.parentElement.clientWidth;
       canvas.height = canvas.parentElement.clientHeight;
       gameState.current.width = canvas.width;
       gameState.current.height = canvas.height;
-      
-      // Keep pointer within bounds
-      if (gameState.current.pointerX === 200) {
-        gameState.current.pointerX = canvas.width / 2;
-        if(gameState.current.heroes[0]) {
-           gameState.current.heroes[0].x = canvas.width / 2;
-           gameState.current.heroes[0].y = canvas.height - 150;
-        }
-      }
     };
     resize();
     window.addEventListener('resize', resize);
 
     const loop = (timestamp) => {
-      updatePhysics(timestamp, firePower, isGameOver, level);
-      render(ctx, firePower, timestamp);
-      
-      if (!isGameOver) {
-        gameState.current.rAF = requestAnimationFrame(loop);
-      }
+        updatePhysics(timestamp);
+        render(ctx, timestamp);
+        if (!isGameOver) {
+          gameState.current.rAF = requestAnimationFrame(loop);
+        }
     };
     
     if (!isGameOver) {
@@ -119,600 +363,381 @@ function App() {
     };
   }, [firePower, isGameOver, level]);
 
-  const getBulletProps = (power) => {
-    if (power === 1) return { size: 4, color: '#2cb6fe', type: 'circle' };
-    if (power === 2) return { size: 6, color: '#00f2fe', type: 'circle' };
-    if (power === 3) return { size: 8, color: '#4facfe', type: 'diamond' };
-    if (power >= 4) return { size: 10, color: '#00ff87', type: 'laser' };
-    return { size: 4, color: '#2cb6fe', type: 'circle' };
-  };
-
-  const updatePhysics = (timestamp, currentFirePower, gameOver, currentLevel) => {
-    if (gameOver) return;
-
+  const updatePhysics = (timestamp) => {
     const state = gameState.current;
     const { width, height } = state;
     if (width === 0) return;
 
-    const elapsed = Date.now() - state.startTime;
+    let ENEMY_SPEED = 1.0 + (level * 0.2); 
+    const MOB_SPEED = 4.0 + (firePower * 0.15); 
 
-    const ENEMY_SPEED = 2.5 + (currentLevel * 0.8); 
-    const playerBaseY = height - 150; 
-    const bulletProps = getBulletProps(currentFirePower);
-
-    // 1. Swarm Movement (Vogel's Spiral for perfect circle clustering around pointer)
-    const C = 14; // spacing modifier
-    for (let i = 0; i < state.heroes.length; i++) {
-       const hero = state.heroes[i];
-       // Golden angle in radians
-       const theta = i * 2.39996;
-       const r = C * Math.sqrt(i);
-       
-       const targetX = state.pointerX + Math.cos(theta) * r;
-       const targetY = playerBaseY + Math.sin(theta) * r;
-       
-       // Smoot lerp towards position (adds elastic crowd feel)
-       hero.x += (targetX - hero.x) * 0.2;
-       hero.y += (targetY - hero.y) * 0.2;
+    if (state.levelKills >= 100) {
+        state.levelKills = 0;
+        setLevel(l => l + 1);
     }
 
-    // 2. Swarm Firing Mechanics
-    const currentFireRate = Math.max(120, 200 - (currentFirePower * 20));
-    if (state.isFiring && timestamp - state.lastFireTime > currentFireRate) {
-      // Regulate bullets to prevent visually cluttering the screen 
-      const maxBullets = Math.min(state.heroes.length, 5 + currentFirePower);
-      const firingChance = state.heroes.length > 0 ? (maxBullets / state.heroes.length) : 0; 
-
-      state.heroes.forEach(h => {
-        if (Math.random() <= firingChance) {
-          state.blueUnits.push({
-            x: h.x,
-            y: h.y - HERO_RADIUS,
-            color: bulletProps.color,
-            size: bulletProps.size,
-            type: bulletProps.type,
-            vx: (Math.random() - 0.5),
-            vy: -BLUE_SPEED - (currentFirePower * 0.3)
-          });
-        }
-      });
-      state.lastFireTime = timestamp;
-    }
-
-
-    // 3. Dynamic Gates Spawning
-    if (timestamp - state.lastGateSpawn > Math.max(1000, 2500 - (currentLevel * 200))) {
-       const isBadGate = Math.random() > 0.6; 
-       let gType = 'add';
-       let gVal = 3 + Math.floor(Math.random() * 5); // Add 3 to 7
-       let gLabel = '+' + gVal;
-       let gColor = 'rgba(0, 150, 255, 0.5)'; 
-
-       if (isBadGate) {
-         if (Math.random() > 0.5) {
-             gType = 'sub';
-             gVal = 2 + Math.floor(Math.random() * 3); // -2 to -4
-             gLabel = '-' + gVal;
-             gColor = 'rgba(255, 0, 50, 0.6)'; 
-         } else {
-             gType = 'div';
-             gVal = 2 + Math.floor(Math.random() * 2); // 2 or 3
-             gLabel = '÷' + gVal;
-             gColor = 'rgba(200, 0, 100, 0.6)'; 
-         }
-       } else if (Math.random() > 0.8) {
-         gType = 'mult';
-         gVal = 2; // x2
-         gLabel = 'x2';
-         gColor = 'rgba(255, 200, 0, 0.5)'; 
-       } else if (gVal <= 4 && Math.random() > 0.6) {
-         // Occasionally give big boosts
-         gType = 'add';
-         gVal = 10;
-         gLabel = '+10';
-       }
-
-       state.gates.push({
-         id: 'g' + Date.now() + Math.random(),
-         x: width * 0.1 + Math.random() * (width * 0.6),
-         y: -100,
-         width: 100,
-         height: 60,
-         type: gType,
-         value: gVal,
-         label: gLabel,
-         color: gColor,
-         vy: isBadGate ? (1.8 + currentLevel * 0.2) : (1.0 + currentLevel * 0.1) // Bad gates fall 1.8x faster!
-       });
-       state.lastGateSpawn = timestamp;
-    }
-
-    // 4. Enemy Spawning
-    if (timestamp - state.lastEnemySpawn > Math.max(150, 1500 - (currentLevel * 300))) {
-      const rand = Math.random();
-      
-      const spawnGiant = () => {
-        let isBoss = state.giantsKilledThisLevel >= 9;
-        let isMega = !isBoss && Math.random() > 0.8; // 20% random very large ball
-        let canSpawn = true;
-        if (isBoss && state.giants.some(g => g.isBoss)) canSpawn = false;
+    // Cannon Firing
+    const currentFireRate = Math.max(60, 200 - (firePower * 20));
+    if (timestamp - state.lastFireTime > currentFireRate) {
+        let positions = getCannonClusterPositions(state.cannonX, height - 100, firePower);
         
-        if (canSpawn) {
-          let hpMultiplier = isBoss ? 4 : (isMega ? 2 : 1);
-          let hp = (5 + currentLevel * 4) * hpMultiplier; // Starts much lower (Lvl 1 Normal = 9 HP)
-          
-          let baseRadius = GIANT_RADIUS + (currentLevel * 1.5); // Size increases each level but slower
-          let radius = isBoss ? baseRadius * 1.6 : (isMega ? baseRadius * 1.3 : baseRadius);
-          
-          state.giants.push({
-            x: width * 0.1 + Math.random() * width * 0.8, y: -50,
-            hp: hp, maxHp: hp, vx: 0, vy: ENEMY_SPEED * (isBoss ? 0.2 : (isMega ? 0.35 : 0.5)),
-            isBoss: isBoss,
-            isMega: isMega,
-            radius: radius
-          });
-        }
-      };
-
-      if (currentLevel >= 3) {
-        if (rand > 0.85) {
-          state.bombers.push({
-            x: width * 0.1 + Math.random() * width * 0.8, y: -30, size: 12,
-            hp: 4 + currentLevel, vy: ENEMY_SPEED * 1.2
-          });
-        } else if (rand > 0.6) { // 25% chance for giants
-          spawnGiant();
-        } else if (rand > 0.4) {
-          const startX = width * 0.1 + Math.random() * width * 0.8;
-          state.dodgers.push({
-            baseX: startX, x: startX, y: -30, size: 10,
-            hp: 2 + Math.floor(currentLevel/2), timeOffset: Math.random() * 100, vy: ENEMY_SPEED * 0.8
-          });
-        } else {
-          const spawnX = width * 0.1 + Math.random() * width * 0.8;
-          const count = 4 + Math.floor(Math.random() * 3 * currentLevel);
-          for (let i = 0; i < count; i++) {
-            state.redUnits.push({
-              x: spawnX + (Math.random() * 60 - 30), y: -20 - (Math.random() * 40),
-              color: '#ff3b30', size: 8, vx: (Math.random() - 0.5) * 1.2, vy: ENEMY_SPEED
+        positions.forEach(pos => {
+            state.blueMobs.push({
+                x: pos[0] + (Math.random() * 6 - 3),
+                y: pos[1] - 30,
+                vx: (Math.random() - 0.5) * 1.5, 
+                vy: -MOB_SPEED,
+                processedBy: new Set() 
             });
-          }
-        }
-      } else if (currentLevel >= 2) {
-        if (rand > 0.8) {
-          spawnGiant();
-        } else if (rand > 0.5) {
-          const startX = width * 0.1 + Math.random() * width * 0.8;
-          state.dodgers.push({
-            baseX: startX, x: startX, y: -30, size: 10,
-            hp: 2 + Math.floor(currentLevel/2), timeOffset: Math.random() * 100, vy: ENEMY_SPEED * 0.8
-          });
-        } else {
-          const spawnX = width * 0.1 + Math.random() * width * 0.8;
-          const count = 4 + Math.floor(Math.random() * 3 * currentLevel);
-          for (let i = 0; i < count; i++) {
-            state.redUnits.push({
-              x: spawnX + (Math.random() * 60 - 30), y: -20 - (Math.random() * 40),
-              color: '#ff3b30', size: 8, vx: (Math.random() - 0.5) * 1.2, vy: ENEMY_SPEED
-            });
-          }
-        }
-      } else {
-        if (rand > 0.70) {
-          spawnGiant();
-        } else {
-          const spawnX = width * 0.1 + Math.random() * width * 0.8;
-          const count = 4 + Math.floor(Math.random() * 3 * currentLevel);
-          for (let i = 0; i < count; i++) {
-            state.redUnits.push({
-              x: spawnX + (Math.random() * 60 - 30), y: -20 - (Math.random() * 40),
-              color: '#ff3b30', size: 8, vx: (Math.random() - 0.5) * 1.2, vy: ENEMY_SPEED
-            });
-          }
-        }
-      }
-      state.lastEnemySpawn = timestamp;
+        });
+        state.lastFireTime = timestamp;
     }
 
-    // 5. Update Gates & Hit Detection against Player Mob
-    for (let i = state.gates.length - 1; i >= 0; i--) {
-      let g = state.gates[i];
-      g.y += g.vy;
-      
-      let gotHit = false;
-      // If ANY hero in the swarm touches the gate, trigger effect on entire swarm and destroy gate.
-      for (let h = 0; h < state.heroes.length; h++) {
-        let hero = state.heroes[h];
-        if (hero.x > g.x && hero.x < g.x + g.width &&
-            hero.y > g.y && hero.y < g.y + g.height) {
+    // Mob Movement
+    for (let i = state.blueMobs.length - 1; i >= 0; i--) {
+        let b = state.blueMobs[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        
+        if (b.x < 10 || b.x > width - 10) {
+            b.vx *= -1;
+            b.x = Math.max(10, Math.min(width - 10, b.x));
+        }
+        
+        if (b.y < -50) {
+            state.blueMobs.splice(i, 1);
+        }
+    }
+
+    // Heavy Weapon Spawn
+    if (timestamp - state.lastHeavySpawn > 18000) { // Every 18s drop a heavy weapon
+        state.heavyWeapons.push({
+            id: Date.now(),
+            x: width * 0.2 + Math.random() * width * 0.6,
+            y: -100,
+            hp: 47, // The canonical number from the screenshot
+            maxHp: 47,
+            vy: ENEMY_SPEED * 0.5
+        });
+        state.lastHeavySpawn = timestamp;
+    }
+
+    // Heavy Weapon Movement
+    for (let i = state.heavyWeapons.length - 1; i >= 0; i--) {
+        let hw = state.heavyWeapons[i];
+        hw.y += hw.vy;
+        if (hw.y > height) state.heavyWeapons.splice(i, 1);
+    }
+
+    // Enemy Movement
+    ["redMobs", "giants"].forEach(type => {
+        for (let i = state[type].length - 1; i >= 0; i--) {
+            let e = state[type][i];
+            e.x += e.vx || 0;
+            e.y += e.vy || ENEMY_SPEED;
             
-            // Trigger Gate!
-            gotHit = true;
-            if (g.type === 'sub') {
-                // Delete heroes
-                state.heroes.splice(-g.value);
-            } else if (g.type === 'div') {
-                // Divide heroes
-                let toRemove = Math.floor(state.heroes.length - (state.heroes.length / g.value));
-                if (toRemove > 0) state.heroes.splice(-toRemove);
-            } else if (g.type === 'add') {
-                // Add heroes up to 10
-                let toAdd = Math.min(g.value, 10 - state.heroes.length);
-                if (toAdd > 0) {
-                    for(let c = 0; c < toAdd; c++) {
-                        state.heroes.push({ x: hero.x, y: hero.y }); // spawn near the trigger point
-                    }
-                }
-            } else if (g.type === 'mult') {
-                // Multiply heroes up to 10
-                let targetAmount = state.heroes.length * g.value;
-                let toAdd = Math.min(targetAmount, 10) - state.heroes.length;
-                if (toAdd > 0) {
-                    for(let c = 0; c < toAdd; c++) {
-                        state.heroes.push({ x: hero.x, y: hero.y }); 
-                    }
-                }
+            let eRad = type === 'giants' ? GIANT_RADIUS : MOB_RADIUS;
+            if (e.x < eRad || e.x > width - eRad) {
+                if (e.vx) e.vx *= -1;
             }
-            break; // Stop checking other heroes for this consumed gate
-        }
-      }
-
-      if (gotHit) {
-         state.gates.splice(i, 1);
-      } else if (g.y > height) {
-         state.gates.splice(i, 1);
-      }
-    }
-
-    // Update Mob Size UI instantly
-    if (mobSizeUI !== state.heroes.length) {
-       setMobSizeUI(state.heroes.length);
-    }
-    
-    // Check Game Over
-    if (state.heroes.length === 0) {
-       setIsGameOver(true);
-       return;
-    }
-
-    // 6. Movement for Bullets
-    for (let i = state.blueUnits.length - 1; i >= 0; i--) {
-      let b = state.blueUnits[i];
-      b.x += b.vx;
-      b.y += b.vy;
-
-      if (b.x < 10 || b.x > width - 10) b.vx *= -1;
-      if (b.y < -50) {
-        state.blueUnits.splice(i, 1);
-      }
-    }
-
-    // 7. Enemy Descent & Hit Detection against Heroes
-    ["redUnits", "giants", "dodgers", "bombers"].forEach(enemyType => {
-      for (let i = state[enemyType].length - 1; i >= 0; i--) {
-        let e = state[enemyType][i];
-        
-        if (enemyType === 'dodgers') {
-          e.x = e.baseX + Math.sin(timestamp * 0.005 + e.timeOffset) * 40;
-          e.y += e.vy;
-        } else {
-          if (e.vx) e.x += e.vx;
-          e.y += e.vy;
-        }
-
-        let eRadius = enemyType === 'giants' ? GIANT_RADIUS : e.size || 8;
-        
-        let enemyDied = false;
-        // Check if Enemy crushes a Hero
-        for (let h = state.heroes.length - 1; h >= 0; h--) {
-            let hero = state.heroes[h];
-            let dx = e.x - hero.x;
-            let dy = e.y - hero.y;
-            
-            if (dx * dx + dy * dy < (eRadius + HERO_RADIUS) * (eRadius + HERO_RADIUS)) {
-                
-                if (enemyType === 'bombers') {
-                   // Explode! Kill heroes within radius 60
-                   for (let hExp = state.heroes.length - 1; hExp >= 0; hExp--) {
-                       let he = state.heroes[hExp];
-                       let dxE = e.x - he.x;
-                       let dyE = e.y - he.y;
-                       if (dxE * dxE + dyE * dyE < 60 * 60) {
-                           state.heroes.splice(hExp, 1);
-                       }
-                   }
-                   enemyDied = true;
-                   break; // Bomber is dead
-                } else {
-                   state.heroes.splice(h, 1); // Kill hero normally
-                   
-                   if (enemyType === 'redUnits') {
-                      enemyDied = true; 
-                      break;
-                   } else if (enemyType === 'dodgers') {
-                      enemyDied = true;
-                      break;
-                   } else if (enemyType === 'giants') {
-                      e.hp -= 2;
-                      if (e.hp <= 0) {
-                          enemyDied = true;
-                          setCoins(prev => prev + (e.isBoss ? 50 : 10));
-                          state.giantsKilledThisLevel++;
-                          if (state.giantsKilledThisLevel >= 10) {
-                              state.giantsKilledThisLevel = 0;
-                              setLevel(prev => prev + 1);
-                          }
-                          setGiantsKilledUI(state.giantsKilledThisLevel);
-                          break;
-                      }
-                   }
-                }
+            if (e.y > height - 100) {
+                setIsGameOver(true);
             }
         }
-        
-        if (enemyDied) {
-           state[enemyType].splice(i, 1);
-        } else if (e.y > height + 50) {
-           if (enemyType === 'giants') {
-               // Penalty for failing to kill yellow ball!
-               let penalty = e.isBoss ? 50 : (e.isMega ? 20 : 10);
-               state.heroes.splice(-penalty); // Reduce hero count
-           }
-           state[enemyType].splice(i, 1);
-        }
-      }
     });
 
-    if (state.heroes.length === 0) {
-       setIsGameOver(true);
-       return; 
+    // Enemy Spawning
+    if (timestamp - state.lastEnemySpawn > Math.max(500, 2500 - (level * 300))) {
+        if (Math.random() > 0.7) {
+            let hp = 100 + level * 50; 
+            state.giants.push({
+                x: width * 0.2 + Math.random() * width * 0.6,
+                y: -50,
+                hp: hp,
+                maxHp: hp,
+                vy: ENEMY_SPEED * 0.5,
+                vx: (Math.random() - 0.5) * 1.0
+            });
+        } else {
+            const count = 10 + Math.floor(Math.random() * 8 * level);
+            const cx = width * 0.1 + Math.random() * width * 0.8;
+            for(let i=0; i<count; i++) {
+                state.redMobs.push({
+                    x: cx + (Math.random() * 80 - 40),
+                    y: -50 - Math.random() * 50,
+                    vy: ENEMY_SPEED,
+                    vx: (Math.random() - 0.5) * 0.5
+                });
+            }
+        }
+        state.lastEnemySpawn = timestamp;
     }
 
-    // 8. Bullet vs Enemy Combat Collisions
-    for (let b = state.blueUnits.length - 1; b >= 0; b--) {
-      let blue = state.blueUnits[b];
-      let collided = false;
-      const bRad = blue.size || 4;
-      const damage = currentFirePower + 1; // Boosted bullet damage since visual bullets are reduced
+    // Gate Spawning & Movement
+    if (timestamp - state.lastGateSpawn > 3500) {
+        state.gates.push({
+            id: Date.now(),
+            y: -100,
+            x: width/2, 
+            speed: (Math.random() > 0.5 ? 1 : -1) * (1 + level * 0.1),
+            type: Math.random() > 0.3 ? 'add' : (Math.random() > 0.5 ? 'mult' : 'sub'),
+            val: 0,
+            w: 120 + Math.random() * 60,
+            h: 45
+        });
+        
+        let g = state.gates[state.gates.length - 1];
+        if (g.type === 'add') g.val = 10 + Math.floor(Math.random() * 30);
+        else if (g.type === 'mult') g.val = 2 + Math.floor(Math.random() * 2);
+        else if (g.type === 'sub') g.val = 10 + Math.floor(Math.random() * 20);
+        
+        state.lastGateSpawn = timestamp;
+    }
 
-      ["redUnits", "giants", "dodgers", "bombers"].forEach(enemyType => {
-        if (collided) return;
-        for (let eIdx = state[enemyType].length - 1; eIdx >= 0; eIdx--) {
-          let e = state[enemyType][eIdx];
-          let eRad = enemyType === 'giants' ? GIANT_RADIUS : (e.size || 8);
-          let dx = blue.x - e.x;
-          let dy = blue.y - e.y;
-          
-          if (dx * dx + dy * dy < (bRad + eRad) * (bRad + eRad)) {
-            collided = true;
-            if (enemyType === 'redUnits') {
-                state[enemyType].splice(eIdx, 1);
-                setCoins(prev => prev + 1);
-            } else {
-                e.hp -= damage;
-                if (e.hp <= 0) {
-                    state[enemyType].splice(eIdx, 1);
-                    if (enemyType === 'giants') {
-                        setCoins(prev => prev + (e.isBoss ? 50 : 10));
-                        state.giantsKilledThisLevel++;
-                        if (state.giantsKilledThisLevel >= 10) {
-                            state.giantsKilledThisLevel = 0;
-                            setLevel(prev => prev + 1);
-                        }
-                        setGiantsKilledUI(state.giantsKilledThisLevel);
-                    } else {
-                        setCoins(prev => prev + 3);
-                    }
+    for (let i = state.gates.length - 1; i >= 0; i--) {
+        let g = state.gates[i];
+        g.y += ENEMY_SPEED * 0.7; 
+        g.x += g.speed;
+        
+        if (g.x < g.w/2 || g.x > width - g.w/2) g.speed *= -1;
+        if (g.y > height) state.gates.splice(i, 1);
+    }
+
+    // Mob hitting Heavy Weapons (Power up drop)
+    for(let bIdx = state.blueMobs.length - 1; bIdx >= 0; bIdx--) {
+        let b = state.blueMobs[bIdx];
+        let collided = false;
+        for (let hIdx = state.heavyWeapons.length - 1; hIdx >= 0; hIdx--) {
+            let hw = state.heavyWeapons[hIdx];
+            if (b.x > hw.x - 45 && b.x < hw.x + 45 && b.y > hw.y - 30 && b.y < hw.y + 30) {
+                hw.hp -= 1;
+                collided = true;
+                if (hw.hp <= 0) {
+                     state.heavyWeapons.splice(hIdx, 1);
+                     setFirePower(p => p + 1); // Cannon gets direct power upgrade!
+                     setCoins(c => c + 100);
+                }
+                break;
+            }
+        }
+        if (collided) state.blueMobs.splice(bIdx, 1);
+    }
+
+    // Mob hitting Gates
+    let newMobsToSpawn = [];
+    state.blueMobs.forEach(b => {
+        state.gates.forEach(g => {
+            if (!b.processedBy.has(g.id)) {
+                let gx = g.x - g.w/2;
+                let gy = g.y - g.h/2;
+                if (b.x > gx && b.x < gx + g.w && b.y > gy && b.y < gy + g.h) {
+                     b.processedBy.add(g.id);
+                     if (g.type === 'add') {
+                         for(let c=0; c<g.val; c++) {
+                             if (state.blueMobs.length + newMobsToSpawn.length > 800) break;
+                             newMobsToSpawn.push({
+                                 x: b.x + (Math.random()*40-20),
+                                 y: gy - 10 - Math.random()*20,
+                                 vx: (Math.random() - 0.5) * 2,
+                                 vy: -MOB_SPEED,
+                                 processedBy: new Set([g.id]) 
+                             });
+                         }
+                     } else if (g.type === 'mult') {
+                         let toCreate = g.val - 1; 
+                         for(let c=0; c<toCreate; c++) {
+                             if (state.blueMobs.length + newMobsToSpawn.length > 800) break;
+                             newMobsToSpawn.push({
+                                 x: b.x + (Math.random()*40-20),
+                                 y: gy - 10 - Math.random()*20,
+                                 vx: (Math.random() - 0.5) * 2,
+                                 vy: -MOB_SPEED,
+                                 processedBy: new Set([g.id]) 
+                             });
+                         }
+                     }
                 }
             }
-            break;
-          }
-        }
-      });
-
-      if (collided) {
-        state.blueUnits.splice(b, 1);
-      }
+        });
+    });
+    
+    for(let i = state.blueMobs.length - 1; i >= 0; i--) {
+        let b = state.blueMobs[i];
+        state.gates.forEach(g => {
+             if (g.type === 'sub' && !b.processedBy.has(g.id)) {
+                 let gx = g.x - g.w/2;
+                 let gy = g.y - g.h/2;
+                 if (b.x > gx && b.x < gx + g.w && b.y > gy && b.y < gy + g.h) {
+                      b.processedBy.add(g.id);
+                      if (g.val > 0) {
+                          g.val--;
+                          state.blueMobs.splice(i, 1);
+                      }
+                 }
+             }
+        });
     }
+
+    if (newMobsToSpawn.length > 0) {
+        state.blueMobs.push(...newMobsToSpawn);
+    }
+
+    // Combat
+    for(let bIdx = state.blueMobs.length - 1; bIdx >= 0; bIdx--) {
+        let b = state.blueMobs[bIdx];
+        let collided = false;
+        
+        for(let rIdx = state.redMobs.length - 1; rIdx >= 0; rIdx--) {
+            let r = state.redMobs[rIdx];
+            let dx = b.x - r.x;
+            let dy = b.y - r.y;
+            if (dx*dx+dy*dy < (MOB_RADIUS*2)*(MOB_RADIUS*2)) {
+                state.redMobs.splice(rIdx, 1);
+                state.levelKills++;
+                setCoins(prev => prev + 1);
+                collided = true;
+                break;
+            }
+        }
+        
+        if (collided) {
+            state.blueMobs.splice(bIdx, 1);
+            continue;
+        }
+
+        for(let gIdx = state.giants.length - 1; gIdx >= 0; gIdx--) {
+            let giant = state.giants[gIdx];
+            let dx = b.x - giant.x;
+            let dy = b.y - giant.y;
+            if (dx*dx+dy*dy < (MOB_RADIUS + GIANT_RADIUS)*(MOB_RADIUS + GIANT_RADIUS)) {
+                giant.hp -= 1;
+                collided = true;
+                if (giant.hp <= 0) {
+                    state.giants.splice(gIdx, 1);
+                    state.levelKills += 10;
+                    setCoins(prev => prev + 25);
+                }
+                break;
+            }
+        }
+        if (collided) state.blueMobs.splice(bIdx, 1);
+    }
+
+    if (mobSizeUI !== state.blueMobs.length) setMobSizeUI(state.blueMobs.length);
   };
 
-  const render = (ctx, currentFirePower, timestamp) => {
+  const render = (ctx, timestamp) => {
     const state = gameState.current;
     const { width, height } = state;
-    ctx.clearRect(0, 0, width, height);
+    
+    ctx.fillStyle = '#b7d4ef';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#ebf5fc';
+    ctx.beginPath();
+    ctx.moveTo(width * 0.1, 0); 
+    ctx.lineTo(width * 0.1, height);
+    ctx.lineTo(width * 0.9, height);
+    ctx.lineTo(width * 0.9, 0);
+    ctx.fill();
+
+    ctx.strokeStyle = '#d7e8f7';
+    ctx.lineWidth = 2;
+    for(let i=0; i<height; i+=50) {
+        let offsetY = (i + (timestamp*0.1)) % height;
+        ctx.beginPath();
+        ctx.moveTo(width*0.1, offsetY);
+        ctx.lineTo(width*0.9, offsetY);
+        ctx.stroke();
+    }
 
     // Draw Gates
     state.gates.forEach(g => {
-      ctx.fillStyle = g.color;
-      ctx.fillRect(g.x, g.y, g.width, g.height);
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(g.x, g.y, g.width, g.height);
-      
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 24px Inter';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(g.label, g.x + g.width/2, g.y + g.height/2);
-    });
-
-    // Draw Bullets
-    ctx.beginPath();
-    state.blueUnits.forEach(p => {
-       ctx.fillStyle = p.color;
-       if (p.type === 'diamond') {
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y - p.size); ctx.lineTo(p.x + p.size, p.y);
-          ctx.lineTo(p.x, p.y + p.size); ctx.lineTo(p.x - p.size, p.y);
-          ctx.fill();
-       } else if (p.type === 'laser') {
-          ctx.fillRect(p.x - p.size/4, p.y - p.size, p.size/2, p.size*2);
-       } else {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
-       }
-    });
-
-    // Draw Enemies
-    const drawBasicCircle = (x, y, r, color) => {
-      ctx.beginPath();
-      const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.1, x, y, r);
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(1, color);
-      ctx.fillStyle = grad;
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    state.redUnits.forEach(u => drawBasicCircle(u.x, u.y, u.size, u.color));
-    state.dodgers.forEach(d => drawBasicCircle(d.x, d.y, d.size, '#8e44ad'));
-    state.bombers.forEach(b => drawBasicCircle(b.x, b.y, b.size, '#e67e22'));
-    
-    state.giants.forEach(g => {
-      const gRad = g.radius || GIANT_RADIUS;
-      drawBasicCircle(g.x, g.y, gRad, '#ffcc00'); 
-      
-      // HP Text
-      ctx.fillStyle = 'black';
-      ctx.font = 'bold 16px Inter';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(g.hp, g.x, g.y - gRad - 16);
-      
-      // Blood Strip (Health bar)
-      const barWidth = gRad * 1.5;
-      const barHeight = 8;
-      const hpPercent = Math.max(0, g.hp / g.maxHp);
-      const barX = g.x - barWidth / 2;
-      const barY = g.y - gRad - 12;
-      
-      ctx.fillStyle = '#333';
-      ctx.fillRect(barX, barY, barWidth, barHeight);
-      ctx.fillStyle = g.isBoss ? '#800000' : (g.isMega ? '#b33939' : '#ff5252'); // Darker red for harder giants
-      ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(barX, barY, barWidth, barHeight);
-    });
-
-    // Draw The Hero Crowd
-    const legSwing = Math.sin(timestamp * 0.01) * 4;
-    const isMoving = Math.abs(state.pointerX - state.heroes[0]?.x) > 5;
-    
-    state.heroes.forEach(h => {
-        ctx.save();
-        ctx.translate(h.x, h.y);
+        let gx = g.x - g.w/2;
+        let gy = g.y - g.h/2;
         
-        // Dynamic tiny human!
-        // Legs
-        ctx.strokeStyle = '#2c3e50';
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        let actSwing = isMoving ? legSwing : 0;
-        ctx.moveTo(-3, 0); ctx.lineTo(-3 + actSwing, 8); ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(3, 0); ctx.lineTo(3 - actSwing, 8); ctx.stroke();
-
-        // Torso
-        ctx.fillStyle = '#2980b9'; 
-        ctx.beginPath(); ctx.roundRect(-6, -12, 12, 12, 3); ctx.fill();
-
-        // Head
-        ctx.fillStyle = '#f1c40f'; 
-        ctx.beginPath(); ctx.arc(0, -16, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = g.type === 'sub' ? 'rgba(50, 0, 0, 0.7)' : 'rgba(0, 30, 60, 0.7)';
+        ctx.strokeStyle = g.type === 'sub' ? '#ff4757' : '#00d2ff';
+        ctx.lineWidth = 4;
         
-        // Visor
-        ctx.fillStyle = '#2c3e50';
-        ctx.beginPath(); ctx.arc(0, -17, 5, Math.PI, 0); ctx.fill();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(gx, gy, g.w, g.h, 6);
+        else ctx.fillRect(gx, gy, g.w, g.h);
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillRect(gx + 2, gy + 2, g.w - 4, 6);
 
-        // Little Weapon
-        ctx.fillStyle = currentFirePower >= 4 ? '#00ff87' : '#34495e';
-        ctx.fillRect(0, -10, 4, 8);
-
-        ctx.restore();
+        let sign = g.type === 'add' ? '+' : (g.type === 'mult' ? 'x' : '-');
+        ctx.fillStyle = '#000';
+        ctx.font = '900 28px Inter';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#000';
+        ctx.strokeText(`${sign}${g.val}`, g.x, g.y+2); 
+        ctx.fillText(`${sign}${g.val}`, g.x, g.y+4); 
+        
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`${sign}${g.val}`, g.x, g.y);
     });
 
-  };
-
-  const handlePointerDown = (e) => {
-    if (isGameOver) return;
-    gameState.current.isFiring = true;
-    updateFirePos(e);
-  };
-
-  const handlePointerMove = (e) => {
-    if (gameState.current.isFiring) {
-      updateFirePos(e);
-    }
-  };
-
-  const handlePointerUp = () => {
-    gameState.current.isFiring = false;
+    state.heavyWeapons.forEach(hw => drawHeavyWeapon(ctx, hw.x, hw.y, Math.ceil(hw.hp)));
+    state.blueMobs.forEach(b => drawLittleMan(ctx, b.x, b.y, MOB_RADIUS, false));
+    state.redMobs.forEach(r => drawLittleMan(ctx, r.x, r.y, MOB_RADIUS, true));
+    state.giants.forEach(g => drawYellowGiant(ctx, g.x, g.y, GIANT_RADIUS, g.hp, g.maxHp));
+    
+    // Draw Player Cluster
+    let positions = getCannonClusterPositions(state.cannonX, height - 100, firePower);
+    positions.forEach(pos => drawPlayerCannonCart(ctx, pos[0], pos[1]));
   };
 
   const updateFirePos = (e) => {
-    const rect = canvasRef.current.getBoundingClientRect();
     let clientX = e.clientX;
     if (e.touches && e.touches.length > 0) clientX = e.touches[0].clientX;
-    gameState.current.pointerX = clientX - rect.left;
+    const rect = canvasRef.current.getBoundingClientRect();
+    let pointerX = clientX - rect.left;
+    gameState.current.cannonX = Math.max(80, Math.min(gameState.current.width - 80, pointerX));
   };
 
   return (
-    <div className="game-container"
-         onPointerDown={handlePointerDown}
-         onPointerMove={handlePointerMove}
-         onPointerUp={handlePointerUp}
-         onPointerCancel={handlePointerUp}
-         style={{ cursor: 'none' }}>
+    <div className="game-container" onPointerDown={updateFirePos} onPointerMove={updateFirePos} style={{ overflow: 'hidden', touchAction: 'none' }}>
       
-      <div className="back-btn">←</div>
-      
-      <div style={{ position:'absolute', top:'10px', left:'50%', transform:'translateX(-50%)', 
-                    color:'#fff', fontWeight:'900', fontSize:'24px', textShadow:'0 2px 0 #000', zIndex:50 }}>
-        LEVEL {level}
-      </div>
-
       <div className="hud">
-        {/* MOB SIZE UI */}
         <div className="hud-pill blue">
-          <div className="hud-icon">🧑‍🤝‍🧑</div>
+          <div className="hud-icon">🧊</div>
           {mobSizeUI}
         </div>
         <div className="hud-pill yellow">
           <div className="hud-icon">🪙</div>
           {coins}
         </div>
-        <div className="hud-pill" style={{ backgroundColor: '#ffcc00', color: '#000' }}>
-          <div className="hud-icon">🟡</div>
-          {giantsKilledUI}/10
-        </div>
       </div>
 
       <div className="game-world">
-        <div className="platform"></div>
         <canvas id="game-canvas" ref={canvasRef}></canvas>
       </div>
 
-      <div style={{ position: 'absolute', bottom: '110px', right: '15px', zIndex: 100 }}>
+      <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform:'translateX(-50%)', zIndex: 100, width: '90%', maxWidth: '350px' }}>
         <button 
           onClick={handleUpgrade}
           style={{
-            backgroundColor: coins >= upgradeCost ? '#ff4757' : '#bdc3c7',
-            border: '3px solid #000',
-            borderRadius: '15px',
-            padding: '10px 15px',
+            backgroundColor: coins >= upgradeCost ? '#2cb6fe' : '#bdc3c7',
+            border: '4px solid #000',
+            borderRadius: '16px',
+            padding: '12px',
             color: coins >= upgradeCost ? '#fff' : '#000',
-            fontWeight: 'bolder',
+            fontWeight: '900', 
+            fontSize: '18px',
+            width: '100%',
             fontFamily: 'Inter',
-            boxShadow: '0 4px 0 #000',
+            boxShadow: '0 6px 0 #000',
             cursor: coins >= upgradeCost ? 'pointer' : 'not-allowed',
-            transform: 'scale(1)',
-            transition: 'background-color 0.2s'
           }}
         >
-          UPGRADE FIRE (Lvl {firePower})<br/>
+          UPGRADE CANNON (Lvl {firePower})<br/>
           💰 {upgradeCost}
         </button>
       </div>
@@ -723,23 +748,13 @@ function App() {
           backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 200,
           display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
         }}>
-          <h1 style={{ color: '#ff4757', textShadow: '2px 2px 0 #000', fontSize: '64px', margin: 0 }}>GAME OVER</h1>
-          <p style={{ color: '#fff', fontSize: '24px', margin: '20px 0' }}>Your Army Was Annihilated!</p>
-          <button 
-            onClick={handleRestart}
-            style={{
-              backgroundColor: '#ffcc00', border: '4px solid #000', padding: '15px 40px',
-              fontSize: '28px', fontWeight: '900', borderRadius: '40px', boxShadow: '0 6px 0 #000', cursor: 'pointer'
-            }}
-          >
-            RETRY
+          <h1 style={{ color: '#ff4757', textShadow: '4px 4px 0 #000', fontSize: '64px', margin: 0 }}>DEFEAT</h1>
+          <p style={{ color: '#fff', fontSize: '24px', margin: '20px 0' }}>The Enemy Reached Your Base!</p>
+          <button onClick={handleRestart} style={{ backgroundColor: '#ffcc00', border: '4px solid #000', padding: '15px 40px', fontSize: '28px', fontWeight: '900', borderRadius: '40px', boxShadow: '0 6px 0 #000', cursor: 'pointer' }}>
+            TRY AGAIN
           </button>
         </div>
       )}
-
-      <div className="bottom-banner">
-        <span className="bottom-banner-text">CHOOSE WISELY!</span>
-      </div>
     </div>
   );
 }

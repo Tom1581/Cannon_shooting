@@ -1,30 +1,67 @@
-# Cannon Control 3D (React + HTML5 Canvas)
+# Zombie Tide
 
-A procedurally generated, ultra-high fidelity 3D-styled arcade shooter built entirely using HTML5 Canvas & Javascript (React/Vite). This game bypasses standard massive game engines like Unity by performing direct programmatic mathematics to draw pseudo-3D game objects, smooth glossy shading, isometric shadows, and heavy vehicle clusters directly in the browser!
+A mobile-first arcade defense game. Drag your survivor squad along the wall while waves of zombies shamble down the road. Funnel through ammo gates to grow the squad, blast the brutes before they breach the line, survive as long as you can.
 
-## 🚀 Features
-- **Procedural Custom Engine:** Zero external image assets; all art (shadows, characters, wheeled carts, giant bosses) are calculated purely through high-speed algorithmic logic.
-- **Dynamic Swarm Combat System:** Physical collision detection between an overwhelming amount of player troops and advancing enemies.
-- **Intelligent Clustering Geometry:** The player base physically dynamically grows from 1 pneumatic cannon cart up to a tightly packed array of multiple clustered, wheeled carts.
-- **The Heavy Weapon Drop:** Periodic massive power-up drops down the screen, requiring exact swarm coordination to deplete its HP and secure a permanent instant stat upgrade!
-- **Vibrant UI:** Numeric floating Boss HPs overlaid precisely onto custom drawn health bars.
+Built with React + Vite, rendered entirely on HTML5 Canvas (every sprite is drawn procedurally — no image assets), and packaged for Android via Capacitor.
 
-## 🎮 How to Play
-1. Move your Cannon Array left/right via Mouse Drag or Touch Swiping.
-2. Blast troops across the field to aggressively push back the Yellow Boss Giants, Red Mob bosses, and avoid the Red panels.
-3. Funnel your troops strictly through Blue `+` or `x` multiplier Gate panels to exponentiate your army!
-4. If the massive Yellow Block (Heavy Weapon Station "47") drops, concentrate fire onto it to capture an immediate 'Fire Power' Cart Upgrade!
-5. Spend Coins to increase your `Fire Power` cluster.
-6. Protect the bottom floor! If an enemy touches the floor, it's Game Over!
+## Play
 
-## 🛠️ Local Development
+1. **Drag left/right** anywhere on the screen to slide your squad.
+2. The squad auto-fires upward. Aim with positioning.
+3. Pass squad members through `+10` / `×2` ammo gates to reinforce. Avoid red barbed-wire gates that thin the line.
+4. Knock down ammo crates with sustained fire — each one breaks open into a permanent firepower upgrade.
+5. Brutes have heavy HP — focus fire. If anything reaches the bottom line, the outpost falls.
+6. Spend coins on **Fire Power**, **Fire Rate**, or **Squad Size** between waves.
 
-Ensure you have Node.js installed, then execute:
+## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Start the local development server
-npm run dev
+npm run dev          # web dev server (Vite)
+npm run build        # production build to dist/
+npx cap sync android # push web build into the Android project
+npx cap open android # open in Android Studio
 ```
+
+## AdMob
+
+Rewarded AdMob ads are wired into the in-game `2x COINS` reward. Browser builds keep using the local fake ad overlay; native Android builds use the Capacitor AdMob plugin.
+
+Development uses Google's official Android test IDs:
+
+- App ID: `ca-app-pub-3940256099942544~3347511713`
+- Rewarded ad unit: `ca-app-pub-3940256099942544/5224354917`
+
+Before a Play Store release, create your AdMob app and rewarded ad unit, then set:
+
+```bash
+# .env.production.local
+VITE_ADMOB_ENABLED=true
+VITE_ADMOB_TESTING=false
+VITE_ADMOB_REWARDED_AD_ID=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+```
+
+And set the native app ID in `android/gradle.properties`:
+
+```properties
+adMobApplicationId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+```
+
+Then rebuild and sync:
+
+```bash
+npm run build
+npx cap sync android
+cd android && ./gradlew assembleDebug
+```
+
+## Tech
+
+- React 18 + Vite 5
+- HTML5 Canvas 2D — all art procedural, zero binary assets
+- Web Audio API — all SFX synthesized at runtime
+- Capacitor 5 (Android)
+
+## License
+
+Original work. No third-party game art, audio, or trademarks are used. The multiplier-gate mechanic is genre-standard across hypercasual titles and is not subject to copyright.

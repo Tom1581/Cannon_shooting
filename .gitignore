@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Audio — keep copyrighted tracks out of the repo
+Thunder_at_the_Palisade.mp3
+public/bg-music.mp3
+*.mp3
+*.wav
+
+# Android build outputs
+android/build/
+android/app/build/
+android/.gradle/
+
+# Signing — never commit keystores or their passwords
+android/app/*.keystore
+android/keystore.properties
+.env.production.local

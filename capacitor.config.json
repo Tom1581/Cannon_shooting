@@ -1,6 +1,6 @@
 {
-  "appId": "mob.control.clone",
-  "appName": "mob-control",
+  "appId": "io.github.a15817348.zombietide",
+  "appName": "Zombie Tide",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

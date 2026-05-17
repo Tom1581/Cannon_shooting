@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">mob-control</string>
-    <string name="title_activity_main">mob-control</string>
-    <string name="package_name">mob.control.clone</string>
-    <string name="custom_url_scheme">mob.control.clone</string>
+    <string name="app_name">Zombie Tide</string>
+    <string name="title_activity_main">Zombie Tide</string>
+    <string name="package_name">io.github.a15817348.zombietide</string>
+    <string name="custom_url_scheme">io.github.a15817348.zombietide</string>
 </resources>

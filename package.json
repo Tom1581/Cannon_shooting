@@ -1,5 +1,5 @@
 {
-  "name": "mob-control-clone",
+  "name": "zombie-tide",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gen-icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^5.3.1",
     "@capacitor/android": "^5.7.8",
     "@capacitor/core": "^5.7.8",
     "react": "^18.3.1",
@@ -26,6 +28,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
+    "sharp": "^0.34.5",
     "vite": "^5.4.10"
   }
 }

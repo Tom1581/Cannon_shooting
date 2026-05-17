@@ -1,4 +1,4 @@
-package mob.control.clone;
+package io.github.a15817348.zombietide;
 
 import com.getcapacitor.BridgeActivity;
 

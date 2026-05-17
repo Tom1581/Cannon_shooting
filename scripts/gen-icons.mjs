@@ -35,6 +35,7 @@ const ADAPTIVE = [
 const fullSvg = await readFile(join(__dirname, 'icon-full.svg'));
 const foregroundSvg = await readFile(join(__dirname, 'icon-foreground.svg'));
 const backgroundSvg = await readFile(join(__dirname, 'icon-background.svg'));
+const storeSvg = await readFile(join(__dirname, 'icon-store.svg'));
 const splashSvg = await readFile(join(__dirname, 'splash.svg'));
 
 async function ensure(dir) {
@@ -92,5 +93,14 @@ for (const s of [...PORT, ...LAND]) {
   await ensure(dir);
   await renderSplash(join(dir, 'splash.png'), s.w, s.h);
 }
+
+const storeDir = join(ROOT, 'store-assets/google-play');
+await ensure(storeDir);
+await sharp(storeSvg, { density: 384 })
+  .resize(512, 512, { fit: 'cover' })
+  .ensureAlpha(1)
+  .png({ compressionLevel: 9 })
+  .toFile(join(storeDir, 'icon.png'));
+console.log('✓ store-assets/google-play/icon.png');
 
 console.log('\nAll icons + splashes regenerated.');

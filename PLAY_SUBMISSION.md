@@ -80,7 +80,11 @@ Expected:
 - `screenOrientation="portrait"`
 - `com.google.android.gms.ads.APPLICATION_ID` uses your real AdMob app ID, not Google's sample ID.
 
-## 3. AdMob release setup
+## 3. Store listing icon
+
+Upload `store-assets/google-play/icon.png` as the Play Console app icon. It is generated from `scripts/icon-store.svg` and is separate from the Android launcher icon because Google Play applies its own rounded mask and shadow.
+
+## 4. AdMob release setup
 
 The app is already wired for rewarded AdMob ads. The checked-in defaults are Google's official Android test IDs, which are correct for development but not for release.
 
@@ -102,7 +106,7 @@ Before uploading to Play Console:
 
 If your Play listing has a developer website, publish an `app-ads.txt` file there using the publisher ID from your AdMob account.
 
-## 4. Play Console questionnaires — answers
+## 5. Play Console questionnaires — answers
 
 **Content rating**
 - Violence: **Mild fantasy violence** (cartoon zombies, no blood)
@@ -124,18 +128,18 @@ If your Play listing has a developer website, publish an `app-ads.txt` file ther
 **Privacy policy URL — required.** You need a publicly hosted page. Simplest:
 - Create a free GitHub Pages site with a single `privacy.html` explaining that Zombie Tide stores local progress/high score on-device and uses Google AdMob for rewarded ads. Link to Google's privacy policy and disclose that AdMob may process advertising identifiers and ad interaction data.
 
-## 5. Things you cannot change after first publish
+## 6. Things you cannot change after first publish
 - **applicationId** (`io.github.a15817348.zombietide`) — locked forever.
 - **The keystore** — back it up redundantly.
 
-## 6. Update flow
+## 7. Update flow
 For every new release:
 1. Bump `versionCode` (must be strictly greater) and `versionName` in `android/app/build.gradle`.
 2. `npm run build && npx cap sync android`
 3. `cd android && ./gradlew bundleRelease`
 4. Upload the new AAB in the Play Console under the same track.
 
-## 7. Regenerating icons / splash
+## 8. Regenerating icons / splash
 Source SVGs live in `scripts/`. Edit them, then:
 ```bash
 npm run gen-icons
